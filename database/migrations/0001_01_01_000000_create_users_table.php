@@ -17,6 +17,8 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->enum('tipo_documento', ['CC', 'CE', 'TI', 'PAS', 'NIT'])->nullable();
+            $table->string('numero_documento')->nullable()->unique();
             $table->rememberToken();
             $table->timestamps();
         });
