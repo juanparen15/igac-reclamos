@@ -31,4 +31,9 @@ class ReclamosEstadisticas extends BaseWidget
                 ->color('success'),
         ];
     }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->check() && auth()->user()->can('ver_estadisticas');
+    }
 }

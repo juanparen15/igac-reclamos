@@ -13,15 +13,16 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 
 class CiudadanoResource extends Resource
 {
     protected static ?string $model = Ciudadano::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-users';
-    
+
     protected static ?string $navigationGroup = 'Administración';
-    
+
     protected static ?int $navigationSort = 1;
 
     public static function form(Form $form): Form
@@ -74,10 +75,10 @@ class CiudadanoResource extends Resource
                                 Forms\Components\Select::make('departamento_id')
                                     ->label('Departamento de Nacimiento')
                                     ->searchable()
-                                    ->options(fn () => Departamento::pluck('nombre', 'id'))
+                                    ->options(fn() => Departamento::pluck('nombre', 'id'))
                                     ->required()
                                     ->reactive()
-                                    ->afterStateUpdated(fn (callable $set) => $set('ciudad_id', null)),
+                                    ->afterStateUpdated(fn(callable $set) => $set('ciudad_id', null)),
                                 Forms\Components\Select::make('ciudad_id')
                                     ->label('Ciudad de Nacimiento')
                                     ->searchable()
@@ -108,12 +109,12 @@ class CiudadanoResource extends Resource
                             ->maxSize(5120),
                     ])
                     ->columns(2),
-                
+
                 Forms\Components\Section::make('Campos Adicionales')
                     ->schema(function () {
                         $campos = CampoDinamico::seccion('perfil')->activo()->orderBy('orden')->get();
                         $components = [];
-                        
+
                         foreach ($campos as $campo) {
                             $component = match ($campo->tipo) {
                                 'text' => Forms\Components\TextInput::make("campos_adicionales.{$campo->nombre}")
@@ -130,19 +131,19 @@ class CiudadanoResource extends Resource
                                 default => Forms\Components\TextInput::make("campos_adicionales.{$campo->nombre}")
                                     ->label($campo->etiqueta),
                             };
-                            
+
                             if ($campo->requerido) {
                                 $component->required();
                             }
-                            
+
                             $components[] = $component;
                         }
-                        
+
                         return $components;
                     })
                     ->columns(2)
                     ->collapsed()
-                    ->visible(fn () => CampoDinamico::seccion('perfil')->activo()->exists()),
+                    ->visible(fn() => CampoDinamico::seccion('perfil')->activo()->exists()),
             ]);
     }
 
@@ -220,5 +221,11 @@ class CiudadanoResource extends Resource
             'edit' => Pages\EditCiudadano::route('/{record}/edit'),
             'view' => Pages\ViewCiudadano::route('/{record}'),
         ];
+    }
+
+    public static function canViewAny(): bool
+    {
+        return Auth::user()->can('gestionar_ciudadanos') ||
+            Auth::user()->hasRole('admin');
     }
 }

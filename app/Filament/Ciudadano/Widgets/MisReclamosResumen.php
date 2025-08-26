@@ -111,4 +111,8 @@ class MisReclamosResumen extends BaseWidget
 
         return $datos;
     }
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->check() && auth()->user()->can('ver_estadisticas');
+    }
 }

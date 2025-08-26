@@ -48,4 +48,9 @@ class Dashboard extends BaseDashboard
             \App\Filament\Ciudadano\Widgets\EstadoMisReclamos::class,
         ];
     }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->check() && auth()->user()->can('ver_dashboard');
+    }
 }

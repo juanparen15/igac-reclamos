@@ -15,6 +15,9 @@ use Filament\Tables\Columns\Layout\Panel;
 use Filament\Tables\Columns\Layout\Split;
 use Filament\Tables\Columns\Layout\Stack;
 use Filament\Support\Enums\FontWeight;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Database\Eloquent\Model;
+
 
 class RoleResource extends Resource
 {
@@ -23,9 +26,13 @@ class RoleResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-shield-check';
 
     protected static ?string $navigationLabel = 'Roles y Permisos';
-    
+
+    protected static ?string $modelLabel = 'Role';
+
+    protected static ?string $pluralModelLabel = 'Roles';
+
     protected static ?string $navigationGroup = 'Administración';
-    
+
     protected static ?int $navigationSort = 2;
 
     public static function form(Form $form): Form
@@ -69,52 +76,47 @@ class RoleResource extends Resource
     {
         return $table
             ->columns([
-                Panel::make([
-                    Split::make([
-                        Stack::make([
-                            Tables\Columns\TextColumn::make('name')
-                                ->label('Rol')
-                                ->weight(FontWeight::Bold)
-                                ->size('lg')
-                                ->searchable()
-                                ->color(fn (string $state): string => match($state) {
-                                    'admin' => 'danger',
-                                    'funcionario' => 'warning',
-                                    'ciudadano' => 'info',
-                                    default => 'gray'
-                                })
-                                ->icon(fn (string $state): string => match($state) {
-                                    'admin' => 'heroicon-m-shield-exclamation',
-                                    'funcionario' => 'heroicon-m-briefcase',
-                                    'ciudadano' => 'heroicon-m-user',
-                                    default => 'heroicon-m-shield-check'
-                                }),
-                            Tables\Columns\TextColumn::make('permissions_count')
-                                ->label('Permisos')
-                                ->counts('permissions')
-                                ->formatStateUsing(fn ($state) => "{$state} permisos asignados")
-                                ->color('gray')
-                                ->icon('heroicon-m-key')
-                                ->size('sm'),
-                        ]),
-                        Tables\Columns\TextColumn::make('users_count')
-                            ->label('Usuarios')
-                            ->counts('users')
-                            ->formatStateUsing(fn ($state) => $state)
-                            ->badge()
-                            ->color('success')
-                            ->size('xl')
-                            ->alignEnd()
-                            ->extraAttributes(['class' => 'font-bold']),
-                    ]),
+                Split::make([
                     Stack::make([
-                        Tables\Columns\TagsColumn::make('permissions.name')
+                        Tables\Columns\TextColumn::make('name')
+                            ->label('Rol')
+                            ->weight(FontWeight::Bold)
+                            ->size('lg')
+                            ->searchable()
+                            ->color(fn(string $state): string => match ($state) {
+                                'admin' => 'danger',
+                                'funcionario' => 'warning',
+                                'ciudadano' => 'info',
+                                default => 'gray'
+                            })
+                            ->icon(fn(string $state): string => match ($state) {
+                                'admin' => 'heroicon-m-shield-exclamation',
+                                'funcionario' => 'heroicon-m-briefcase',
+                                'ciudadano' => 'heroicon-m-user',
+                                default => 'heroicon-m-shield-check'
+                            }),
+                        Tables\Columns\TextColumn::make('permissions_count')
                             ->label('Permisos')
-                            ->limit(3)
-                            ->separator(','),
+                            ->counts('permissions')
+                            ->formatStateUsing(fn($state) => "{$state} permisos asignados")
+                            ->color('gray')
+                            ->icon('heroicon-m-key')
+                            ->size('sm'),
                     ]),
-                ])
-                ->collapsible(),
+                    Tables\Columns\TextColumn::make('users_count')
+                        ->label('Usuarios')
+                        ->counts('users')
+                        ->formatStateUsing(fn($state) => $state)
+                        ->badge()
+                        ->color('success')
+                        ->size('xl')
+                        ->alignEnd()
+                        ->extraAttributes(['class' => 'font-bold']),
+                ]),
+                Tables\Columns\TagsColumn::make('permissions.name')
+                    ->label('Permisos')
+                    ->limit(3)
+                    ->separator(','),
             ])
             ->contentGrid([
                 'md' => 2,
@@ -123,10 +125,10 @@ class RoleResource extends Resource
             ->filters([
                 Tables\Filters\Filter::make('has_users')
                     ->label('Con usuarios')
-                    ->query(fn (Builder $query): Builder => $query->has('users')),
+                    ->query(fn(Builder $query): Builder => $query->has('users')),
                 Tables\Filters\Filter::make('system_roles')
                     ->label('Roles del sistema')
-                    ->query(fn (Builder $query): Builder => $query->whereIn('name', ['admin', 'funcionario', 'ciudadano'])),
+                    ->query(fn(Builder $query): Builder => $query->whereIn('name', ['admin', 'funcionario', 'ciudadano'])),
             ])
             ->actions([
                 Tables\Actions\ActionGroup::make([
@@ -135,7 +137,7 @@ class RoleResource extends Resource
                         ->label('Duplicar')
                         ->icon('heroicon-o-document-duplicate')
                         ->color('info')
-                        ->visible(fn (Role $record): bool => !in_array($record->name, ['admin', 'funcionario', 'ciudadano']))
+                        ->visible(fn(Role $record): bool => !in_array($record->name, ['admin', 'funcionario', 'ciudadano']))
                         ->form([
                             Forms\Components\TextInput::make('name')
                                 ->label('Nombre del nuevo rol')
@@ -145,24 +147,24 @@ class RoleResource extends Resource
                         ->action(function (Role $record, array $data): void {
                             $newRole = Role::create(['name' => $data['name']]);
                             $newRole->syncPermissions($record->permissions);
-                            
+
                             \Filament\Notifications\Notification::make()
                                 ->title('Rol duplicado exitosamente')
                                 ->success()
                                 ->send();
                         }),
                     Tables\Actions\DeleteAction::make()
-                        ->visible(fn (Role $record): bool => !in_array($record->name, ['admin', 'funcionario', 'ciudadano'])),
+                        ->visible(fn(Role $record): bool => !in_array($record->name, ['admin', 'funcionario', 'ciudadano'])),
                 ])
-                ->button()
-                ->label('Acciones')
-                ->icon('heroicon-m-ellipsis-vertical')
-                ->size('sm'),
+                    ->button()
+                    ->label('Acciones')
+                    ->icon('heroicon-m-ellipsis-vertical')
+                    ->size('sm'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make()
-                        ->visible(fn () => auth()->user()->hasRole('admin')),
+                        ->visible(fn() => auth()->user()->hasRole('admin')),
                 ]),
             ])
             ->emptyStateHeading('No hay roles creados')
@@ -185,15 +187,21 @@ class RoleResource extends Resource
             'edit' => Pages\EditRole::route('/{record}/edit'),
         ];
     }
-    
+
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
             ->withCount(['users', 'permissions']);
     }
-    
+
     public static function getNavigationBadge(): ?string
     {
         return static::getModel()::count();
+    }
+
+    public static function canViewAny(): bool
+    {
+        return Auth::user()->can('gestionar_usuarios') ||
+            Auth::user()->hasRole('admin');
     }
 }

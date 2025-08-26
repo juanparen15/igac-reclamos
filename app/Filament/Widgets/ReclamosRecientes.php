@@ -45,8 +45,8 @@ class ReclamosRecientes extends BaseWidget
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Fecha')
                     ->since()
-                    // ->dateTime()
-                    // ->sortable(),
+                // ->dateTime()
+                // ->sortable(),
             ])
             ->actions([
                 Tables\Actions\Action::make('ver')
@@ -55,5 +55,10 @@ class ReclamosRecientes extends BaseWidget
                     ->url(fn(Reclamo $record): string => route('filament.admin.resources.reclamos.view', $record)),
             ])
             ->paginated(false);
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->check() && auth()->user()->can('ver_estadisticas');
     }
 }

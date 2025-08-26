@@ -19,6 +19,7 @@ use Filament\Tables\Columns\Layout\Stack;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Infolist;
 use Filament\Infolists\Components;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\HtmlString;
 
 class UserResource extends Resource
@@ -474,5 +475,11 @@ class UserResource extends Resource
     public static function getNavigationBadgeColor(): ?string
     {
         return 'primary';
+    }
+
+    public static function canViewAny(): bool
+    {
+        return Auth::user()->can('gestionar_usuarios') ||
+            Auth::user()->hasRole('admin');
     }
 }

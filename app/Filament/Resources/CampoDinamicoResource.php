@@ -9,19 +9,20 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
 
 class CampoDinamicoResource extends Resource
 {
     protected static ?string $model = CampoDinamico::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-adjustments-horizontal';
-    
+
     protected static ?string $navigationGroup = 'Configuración';
-    
+
     protected static ?string $label = 'Campo Dinámico';
-    
+
     protected static ?string $pluralLabel = 'Campos Dinámicos';
-    
+
     protected static ?int $navigationSort = 2;
 
     public static function form(Form $form): Form
@@ -54,7 +55,7 @@ class CampoDinamicoResource extends Resource
                     ->required()
                     ->reactive(),
                 Forms\Components\KeyValue::make('opciones')
-                    ->visible(fn (callable $get) => $get('tipo') === 'select')
+                    ->visible(fn(callable $get) => $get('tipo') === 'select')
                     ->helperText('Ingrese las opciones para la lista desplegable'),
                 Forms\Components\Toggle::make('requerido')
                     ->default(false),
@@ -115,5 +116,11 @@ class CampoDinamicoResource extends Resource
         return [
             'index' => Pages\ManageCampoDinamicos::route('/'),
         ];
+    }
+
+    public static function canViewAny(): bool
+    {
+        return Auth::user()->can('gestionar_campos_dinamicos') ||
+            Auth::user()->hasRole('admin');
     }
 }

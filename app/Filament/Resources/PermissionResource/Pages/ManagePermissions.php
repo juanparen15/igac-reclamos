@@ -13,7 +13,20 @@ class ManagePermissions extends ManageRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make(),
+            Actions\CreateAction::make()
+                ->label('Nuevo Permiso')
+                ->icon('heroicon-m-plus')
+                ->visible(fn () => auth()->user()->hasPermissionTo('crear_roles')),
         ];
+    }
+
+    public function getTitle(): string 
+    {
+        return 'Gestión de Permisos';
+    }
+
+    public function getSubheading(): ?string
+    {
+        return 'Administre los permisos individuales del sistema';
     }
 }

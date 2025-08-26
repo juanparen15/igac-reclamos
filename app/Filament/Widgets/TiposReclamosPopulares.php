@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\DB;
 class TiposReclamosPopulares extends ChartWidget
 {
     protected static ?string $heading = 'Tipos de Reclamos Más Comunes';
-    
+
     protected static ?int $sort = 5;
 
     protected function getData(): array
@@ -18,7 +18,7 @@ class TiposReclamosPopulares extends ChartWidget
         $tipos = TipoReclamo::activo()->get();
         $data = [];
         $labels = [];
-        
+
         foreach ($tipos as $tipo) {
             $count = Reclamo::whereJsonContains('tipos_reclamo_ids', $tipo->id)->count();
             if ($count > 0) {
@@ -49,5 +49,10 @@ class TiposReclamosPopulares extends ChartWidget
     protected function getType(): string
     {
         return 'doughnut';
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->check() && auth()->user()->can('ver_estadisticas');
     }
 }

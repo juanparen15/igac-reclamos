@@ -57,4 +57,8 @@ class RecentUsersWidget extends BaseWidget
                     ->size('sm'),
             ]);
     }
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->check() && auth()->user()->can('ver_estadisticas');
+    }
 }

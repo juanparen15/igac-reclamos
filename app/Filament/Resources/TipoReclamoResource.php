@@ -9,15 +9,16 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
 
 class TipoReclamoResource extends Resource
 {
     protected static ?string $model = TipoReclamo::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-tag';
-    
+
     protected static ?string $navigationGroup = 'Configuración';
-    
+
     protected static ?int $navigationSort = 1;
 
     public static function form(Form $form): Form
@@ -76,5 +77,11 @@ class TipoReclamoResource extends Resource
         return [
             'index' => Pages\ManageTipoReclamos::route('/'),
         ];
+    }
+
+        public static function canViewAny(): bool
+    {
+        return Auth::user()->can('gestionar_tipo_reclamos') ||
+            Auth::user()->hasRole('admin');
     }
 }

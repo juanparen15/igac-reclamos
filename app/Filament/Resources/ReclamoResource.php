@@ -17,6 +17,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\HtmlString;
 use Filament\Notifications\Notification;
+use Illuminate\Support\Facades\Auth;
 
 class ReclamoResource extends Resource
 {
@@ -157,7 +158,7 @@ class ReclamoResource extends Resource
                 Tables\Columns\TextColumn::make('ciudadano.nombre_completo')
                     ->label('Ciudadano')
                     ->searchable(['ciudadanos.primer_nombre', 'ciudadanos.primer_apellido'])
-                    ->description(fn (Reclamo $record): string => $record->ciudadano->documento_completo),
+                    ->description(fn(Reclamo $record): string => $record->ciudadano->documento_completo),
                 Tables\Columns\TextColumn::make('asunto')
                     ->label('Asunto')
                     ->limit(50)
@@ -176,7 +177,7 @@ class ReclamoResource extends Resource
                         'success' => 'resuelto',
                         'gray' => 'cerrado',
                     ])
-                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                    ->formatStateUsing(fn(string $state): string => match ($state) {
                         'nuevo' => 'Nuevo',
                         'en_proceso' => 'En Proceso',
                         'resuelto' => 'Resuelto',
@@ -212,7 +213,7 @@ class ReclamoResource extends Resource
                     ->searchable(),
                 Tables\Filters\Filter::make('sin_asignar')
                     ->label('Sin asignar')
-                    ->query(fn (Builder $query): Builder => $query->whereNull('asignado_a')),
+                    ->query(fn(Builder $query): Builder => $query->whereNull('asignado_a')),
                 Tables\Filters\Filter::make('created_at')
                     ->form([
                         Forms\Components\DatePicker::make('created_from')
@@ -235,13 +236,13 @@ class ReclamoResource extends Resource
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
-                
+
                 // Acciones rápidas de cambio de estado
                 Tables\Actions\Action::make('asignar')
                     ->label('Asignar')
                     ->icon('heroicon-o-user-plus')
                     ->color('info')
-                    ->visible(fn (Reclamo $record): bool => !$record->asignado_a && auth()->user()->can('asignar_reclamos'))
+                    ->visible(fn(Reclamo $record): bool => !$record->asignado_a && auth()->user()->can('asignar_reclamos'))
                     ->form([
                         Forms\Components\Select::make('asignado_a')
                             ->label('Asignar a')
@@ -254,20 +255,21 @@ class ReclamoResource extends Resource
                             'asignado_a' => $data['asignado_a'],
                             'estado' => 'en_proceso',
                         ]);
-                        
+
                         Notification::make()
                             ->title('Reclamo asignado')
                             ->success()
                             ->send();
                     }),
-                    
+
                 Tables\Actions\Action::make('resolver')
                     ->label('Resolver')
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
-                    ->visible(fn (Reclamo $record): bool => 
-                        $record->estado === 'en_proceso' && 
-                        auth()->user()->can('resolver_reclamos')
+                    ->visible(
+                        fn(Reclamo $record): bool =>
+                        $record->estado === 'en_proceso' &&
+                            auth()->user()->can('resolver_reclamos')
                     )
                     ->requiresConfirmation()
                     ->modalHeading('Resolver Reclamo')
@@ -278,13 +280,13 @@ class ReclamoResource extends Resource
                             'estado' => 'resuelto',
                             'fecha_resolucion' => now(),
                         ]);
-                        
+
                         Notification::make()
                             ->title('Reclamo resuelto')
                             ->success()
                             ->send();
                     }),
-                    
+
                 Tables\Actions\Action::make('imprimir_ticket')
                     ->label('Imprimir')
                     ->icon('heroicon-o-printer')
@@ -305,7 +307,7 @@ class ReclamoResource extends Resource
                                     'estado' => $record->estado === 'nuevo' ? 'en_proceso' : $record->estado,
                                 ]);
                             });
-                            
+
                             Notification::make()
                                 ->title('Reclamos asignados')
                                 ->success()
@@ -320,21 +322,21 @@ class ReclamoResource extends Resource
                         ])
                         ->requiresConfirmation()
                         ->deselectRecordsAfterCompletion(),
-                        
+
                     Tables\Actions\BulkAction::make('cambiar_estado')
                         ->label('Cambiar estado')
                         ->icon('heroicon-o-arrow-path')
                         ->action(function ($records, array $data) {
                             $records->each(function ($record) use ($data) {
                                 $updateData = ['estado' => $data['estado']];
-                                
+
                                 if (in_array($data['estado'], ['resuelto', 'cerrado'])) {
                                     $updateData['fecha_resolucion'] = now();
                                 }
-                                
+
                                 $record->update($updateData);
                             });
-                            
+
                             Notification::make()
                                 ->title('Estados actualizados')
                                 ->success()
@@ -352,7 +354,7 @@ class ReclamoResource extends Resource
                         ])
                         ->requiresConfirmation()
                         ->deselectRecordsAfterCompletion(),
-                        
+
                     Tables\Actions\DeleteBulkAction::make()
                         ->visible(fn(): bool => auth()->user()->hasRole('admin')),
                 ]),
@@ -389,18 +391,24 @@ class ReclamoResource extends Resource
 
         return $query;
     }
-    
+
     public static function getNavigationBadge(): ?string
     {
         if (auth()->user()->hasRole('admin')) {
             return static::getModel()::where('estado', 'nuevo')->count();
         }
-        
+
         return null;
     }
-    
+
     public static function getNavigationBadgeColor(): ?string
     {
         return 'danger';
+    }
+
+    public static function canViewAny(): bool
+    {
+        return Auth::user()->hasPermissionTo('gestionar_reclamos') || Auth::user()->hasPermissionTo('asignar_reclamos') || Auth::user()->hasPermissionTo('crear_reclamos') ||
+            Auth::user()->hasRole('admin');
     }
 }

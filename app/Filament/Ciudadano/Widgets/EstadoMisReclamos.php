@@ -9,9 +9,9 @@ use Filament\Widgets\ChartWidget;
 class EstadoMisReclamos extends ChartWidget
 {
     protected static ?string $heading = 'Estado de Mis Reclamos';
-    
+
     protected static ?int $sort = 2;
-    
+
     protected int | string | array $columnSpan = [
         'sm' => 2,
         'md' => 1,
@@ -21,7 +21,7 @@ class EstadoMisReclamos extends ChartWidget
     protected function getData(): array
     {
         $ciudadano = Ciudadano::where('user_id', auth()->id())->first();
-        
+
         // Si no hay ciudadano o perfil incompleto
         if (!$ciudadano || !$ciudadano->perfil_completo) {
             return [
@@ -35,19 +35,19 @@ class EstadoMisReclamos extends ChartWidget
                 'labels' => ['Complete su perfil'],
             ];
         }
-        
+
         $estados = [
             'nuevo' => ['label' => 'Nuevos', 'color' => 'rgba(59, 130, 246, 0.8)'],
             'en_proceso' => ['label' => 'En Proceso', 'color' => 'rgba(245, 158, 11, 0.8)'],
             'resuelto' => ['label' => 'Resueltos', 'color' => 'rgba(34, 197, 94, 0.8)'],
             'cerrado' => ['label' => 'Cerrados', 'color' => 'rgba(107, 114, 128, 0.8)'],
         ];
-        
+
         $data = [];
         $labels = [];
         $backgroundColor = [];
         $totalReclamos = 0;
-        
+
         foreach ($estados as $key => $config) {
             $count = $ciudadano->reclamos()->where('estado', $key)->count();
             if ($count > 0) {
@@ -57,7 +57,7 @@ class EstadoMisReclamos extends ChartWidget
                 $totalReclamos += $count;
             }
         }
-        
+
         // Si no hay reclamos
         if (empty($data)) {
             return [
@@ -89,11 +89,11 @@ class EstadoMisReclamos extends ChartWidget
     {
         return 'doughnut';
     }
-    
+
     protected function getOptions(): array
     {
         $ciudadano = Ciudadano::where('user_id', auth()->id())->first();
-        
+
         return [
             'plugins' => [
                 'legend' => [
@@ -126,10 +126,15 @@ class EstadoMisReclamos extends ChartWidget
             'cutout' => '60%',
         ];
     }
-    
+
     public static function canView(): bool
     {
         $ciudadano = Ciudadano::where('user_id', auth()->id())->first();
         return $ciudadano !== null;
+    }
+    
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->check() && auth()->user()->can('ver_estadisticas');
     }
 }

@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\DB;
 class ReclamosChart extends ChartWidget
 {
     protected static ?string $heading = 'Reclamos por Mes';
-    
+
     protected static ?int $sort = 4;
 
     protected function getData(): array
@@ -18,15 +18,15 @@ class ReclamosChart extends ChartWidget
             DB::raw('MONTH(created_at) as mes'),
             DB::raw('COUNT(*) as total')
         )
-        ->whereYear('created_at', date('Y'))
-        ->groupBy('mes')
-        ->orderBy('mes')
-        ->get();
+            ->whereYear('created_at', date('Y'))
+            ->groupBy('mes')
+            ->orderBy('mes')
+            ->get();
 
         $meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-        
+
         $data = array_fill(0, 12, 0);
-        
+
         foreach ($reclamos as $reclamo) {
             $data[$reclamo->mes - 1] = $reclamo->total;
         }
@@ -48,5 +48,10 @@ class ReclamosChart extends ChartWidget
     protected function getType(): string
     {
         return 'bar';
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->check() && auth()->user()->can('ver_estadisticas');
     }
 }
