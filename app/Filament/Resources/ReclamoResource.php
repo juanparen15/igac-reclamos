@@ -235,8 +235,8 @@ class ReclamoResource extends Resource
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
-
+                Tables\Actions\EditAction::make('editar')
+                    ->visible(fn(Reclamo $record): bool => auth()->user()->can('editar_reclamos') && in_array($record->estado, ['nuevo'])),
                 // Acciones rápidas de cambio de estado
                 Tables\Actions\Action::make('asignar')
                     ->label('Asignar')
@@ -408,7 +408,12 @@ class ReclamoResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return Auth::user()->hasPermissionTo('gestionar_reclamos') || Auth::user()->hasPermissionTo('asignar_reclamos') || Auth::user()->hasPermissionTo('crear_reclamos') ||
+        return Auth::user()->can('gestionar_reclamos') ||
+            Auth::user()->can('ver_reclamos') ||
+            Auth::user()->can('crear_reclamos') ||
+            Auth::user()->can('editar_reclamos') ||
+            Auth::user()->can('asignar_reclamos') ||
+            Auth::user()->can('resolver_reclamos') ||
             Auth::user()->hasRole('admin');
     }
 }

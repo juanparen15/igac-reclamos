@@ -276,11 +276,13 @@ class UserResource extends Resource
                     Tables\Actions\ViewAction::make()
                         ->icon('heroicon-m-eye'),
                     Tables\Actions\EditAction::make()
+                        ->visible(fn(): bool => Auth::user()->can('editar_usuarios') || Auth::user()->hasRole('admin'))
                         ->icon('heroicon-m-pencil-square'),
                     Tables\Actions\Action::make('changePassword')
                         ->label('Cambiar Contraseña')
                         ->icon('heroicon-o-key')
                         ->color('warning')
+                        ->visible(fn(): bool => Auth::user()->can('editar_usuarios') || Auth::user()->hasRole('admin'))
                         ->modalHeading('Cambiar Contraseña')
                         ->modalWidth('md')
                         ->form([
@@ -317,6 +319,7 @@ class UserResource extends Resource
                         ->label(fn(User $record) => $record->active ? 'Desactivar' : 'Activar')
                         ->icon(fn(User $record) => $record->active ? 'heroicon-o-x-circle' : 'heroicon-o-check-circle')
                         ->color(fn(User $record) => $record->active ? 'danger' : 'success')
+                        ->visible(fn(): bool => Auth::user()->can('desactivar_usuarios') || Auth::user()->hasRole('admin'))
                         ->requiresConfirmation()
                         ->action(function (User $record): void {
                             $record->update(['active' => !$record->active]);
@@ -480,6 +483,10 @@ class UserResource extends Resource
     public static function canViewAny(): bool
     {
         return Auth::user()->can('gestionar_usuarios') ||
+            Auth::user()->can('ver_usuarios') ||
+            Auth::user()->can('crear_usuarios') ||
+            Auth::user()->can('editar_usuarios') ||
+            Auth::user()->can('eliminar_usuarios') ||
             Auth::user()->hasRole('admin');
     }
 }

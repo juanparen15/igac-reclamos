@@ -121,6 +121,10 @@ class CampoDinamicoResource extends Resource
     public static function canViewAny(): bool
     {
         return Auth::user()->can('gestionar_campos_dinamicos') ||
+            Auth::user()->can('ver_campos_dinamicos') ||
+            Auth::user()->can('crear_campos_dinamicos') ||
+            Auth::user()->can('editar_campos_dinamicos') ||
+            Auth::user()->can('eliminar_campos_dinamicos') ||
             Auth::user()->hasRole('admin');
     }
 }

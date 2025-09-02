@@ -9,6 +9,7 @@ use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Resources\Pages\ListRecords\Tab;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 
 class ListUsers extends ListRecords
 {
@@ -17,48 +18,64 @@ class ListUsers extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make()
+            Actions\CreateAction::make('Nuevo Usuario')
+                ->visible(fn(): bool => Auth::user()->can('crear_usuarios') || Auth::user()->hasRole('admin'))
                 ->label('Nuevo Usuario')
                 ->icon('heroicon-m-user-plus'),
         ];
     }
-    
+
     protected function getHeaderWidgets(): array
     {
         return [
             UsersOverview::class,
         ];
     }
-    
+
     public function getTabs(): array
     {
         return [
             'all' => Tab::make('Todos')
                 ->icon('heroicon-m-user-group'),
-                
+
             'admins' => Tab::make('Administradores')
-                ->modifyQueryUsing(fn (Builder $query) => $query->role('admin'))
+                ->modifyQueryUsing(fn(Builder $query) => $query->role('admin'))
                 ->badge(User::role('admin')->count())
                 ->badgeColor('danger')
                 ->icon('heroicon-m-shield-exclamation'),
-                
+
             'funcionarios' => Tab::make('Funcionarios')
-                ->modifyQueryUsing(fn (Builder $query) => $query->role('funcionario'))
+                ->modifyQueryUsing(fn(Builder $query) => $query->role('funcionario'))
                 ->badge(User::role('funcionario')->count())
                 ->badgeColor('warning')
                 ->icon('heroicon-m-briefcase'),
-                
+
             'ciudadanos' => Tab::make('Ciudadanos')
-                ->modifyQueryUsing(fn (Builder $query) => $query->role('ciudadano'))
+                ->modifyQueryUsing(fn(Builder $query) => $query->role('ciudadano'))
                 ->badge(User::role('ciudadano')->count())
                 ->badgeColor('info')
                 ->icon('heroicon-m-users'),
-                
+
             'no_verificados' => Tab::make('No Verificados')
-                ->modifyQueryUsing(fn (Builder $query) => $query->whereNull('email_verified_at'))
+                ->modifyQueryUsing(fn(Builder $query) => $query->whereNull('email_verified_at'))
                 ->badge(User::whereNull('email_verified_at')->count())
                 ->badgeColor('gray')
                 ->icon('heroicon-m-x-circle'),
         ];
     }
+
+    // public static function canCreate(): bool
+    // {
+    //     return Auth::user()->can('crear_usuarios') || Auth::user()->hasRole('admin');
+    // }
+
+    // public static function canViewAny(): bool
+    // {
+    //     return Auth::user()->can('gestionar_usuarios') ||
+    //         Auth::user()->can('ver_usuarios') ||
+    //         Auth::user()->can('crear_usuarios') ||
+    //         Auth::user()->can('editar_usuarios') ||
+    //         Auth::user()->can('eliminar_usuarios') ||
+    //         Auth::user()->hasRole('admin');
+    // }
 }

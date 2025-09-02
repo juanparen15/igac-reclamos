@@ -78,16 +78,25 @@ class PerfilCiudadanoResource extends Resource
                             ->tel()
                             ->required()
                             ->maxLength(20),
-                        Forms\Components\Textarea::make('direccion_notificacion')
-                            ->label('Dirección de Notificación')
+                        Forms\Components\Select::make('genero')
+                            ->label('Género')
+                            ->options([
+                                'M' => 'Masculino',
+                                'F' => 'Femenino',
+                                'O' => 'Otro',
+                            ])
                             ->required()
-                            ->rows(2)
-                            ->maxLength(255),
-                        Forms\Components\DatePicker::make('fecha_nacimiento')
-                            ->label('Fecha de Nacimiento')
-                            ->required()
-                            ->maxDate(now()->subYears(18))
-                            ->displayFormat('d/m/Y'),
+                            ->native(false),
+                        // Forms\Components\Textarea::make('direccion_notificacion')
+                        //     ->label('Dirección de Notificación')
+                        //     ->required()
+                        //     ->rows(2)
+                        //     ->maxLength(255),
+                        // Forms\Components\DatePicker::make('fecha_nacimiento')
+                        //     ->label('Fecha de Nacimiento')
+                        //     ->required()
+                        //     ->maxDate(now()->subYears(18))
+                        //     ->displayFormat('d/m/Y'),
                         Forms\Components\Grid::make(2)
                             ->schema([
                                 Forms\Components\Select::make('departamento_id')
@@ -119,30 +128,21 @@ class PerfilCiudadanoResource extends Resource
                                     ->preload()
                                     ->live(),
                             ]),
-                        Forms\Components\Select::make('genero')
-                            ->label('Género')
-                            ->options([
-                                'M' => 'Masculino',
-                                'F' => 'Femenino',
-                                'O' => 'Otro',
-                            ])
-                            ->required()
-                            ->native(false),
-                        Forms\Components\TextInput::make('condicion_especial')
-                            ->label('Condición Especial')
-                            ->helperText('Si tiene alguna condición especial, por favor especifique')
-                            ->maxLength(100),
-                        Forms\Components\FileUpload::make('foto_perfil')
-                            ->label('Foto de Perfil')
-                            ->image()
-                            ->imageEditor()
-                            ->imageEditorAspectRatios([
-                                '1:1',
-                            ])
-                            ->directory('perfiles')
-                            ->disk('public')
-                            ->maxSize(5120)
-                            ->helperText('Tamaño máximo: 5MB. Formatos: JPG, PNG'),
+                        // Forms\Components\TextInput::make('condicion_especial')
+                        //     ->label('Condición Especial')
+                        //     ->helperText('Si tiene alguna condición especial, por favor especifique')
+                        //     ->maxLength(100),
+                        // Forms\Components\FileUpload::make('foto_perfil')
+                        //     ->label('Foto de Perfil')
+                        //     ->image()
+                        //     ->imageEditor()
+                        //     ->imageEditorAspectRatios([
+                        //         '1:1',
+                        //     ])
+                        //     ->directory('perfiles')
+                        //     ->disk('public')
+                        //     ->maxSize(5120)
+                        //     ->helperText('Tamaño máximo: 5MB. Formatos: JPG, PNG'),
                     ])
                     ->columns(2),
 

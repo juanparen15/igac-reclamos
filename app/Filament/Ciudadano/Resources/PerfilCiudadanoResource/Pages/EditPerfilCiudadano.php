@@ -6,6 +6,7 @@ use App\Filament\Ciudadano\Resources\PerfilCiudadanoResource;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 use Filament\Notifications\Notification;
+use Illuminate\Support\Facades\DB;
 
 class EditPerfilCiudadano extends EditRecord
 {
@@ -43,8 +44,8 @@ class EditPerfilCiudadano extends EditRecord
             'primer_nombre',
             'primer_apellido',
             'numero_celular',
-            'direccion_notificacion',
-            'fecha_nacimiento',
+            // 'direccion_notificacion',
+            // 'fecha_nacimiento',
             'departamento_id',
             'ciudad_id',
             'genero',
@@ -63,7 +64,7 @@ class EditPerfilCiudadano extends EditRecord
         }
 
         // Actualizar directamente sin disparar observers
-        \DB::table('ciudadanos')
+        DB::table('ciudadanos')
             ->where('id', $this->record->id)
             ->update(['perfil_completo' => $completo]);
 

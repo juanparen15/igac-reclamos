@@ -79,9 +79,13 @@ class TipoReclamoResource extends Resource
         ];
     }
 
-        public static function canViewAny(): bool
+    public static function canViewAny(): bool
     {
-        return Auth::user()->can('gestionar_tipo_reclamos') ||
+        return Auth::user()->can('gestionar_tipos_reclamo') ||
+            Auth::user()->can('ver_tipos_reclamo') ||
+            Auth::user()->can('crear_tipos_reclamo') ||
+            Auth::user()->can('editar_tipos_reclamo') ||
+            Auth::user()->can('eliminar_tipos_reclamo') ||
             Auth::user()->hasRole('admin');
     }
 }

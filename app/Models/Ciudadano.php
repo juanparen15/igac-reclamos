@@ -140,20 +140,20 @@ class Ciudadano extends Model
         'primer_apellido',
         'segundo_apellido',
         'numero_celular',
-        'direccion_notificacion',
-        'fecha_nacimiento',
+        // 'direccion_notificacion',
+        // 'fecha_nacimiento',
         'departamento_id',
         'ciudad_id',
         'genero',
-        'condicion_especial',
-        'foto_perfil',
+        // 'condicion_especial',
+        // 'foto_perfil',
         'campos_adicionales',
         'perfil_completo',
     ];
 
     protected $casts = [
         'campos_adicionales' => 'array',
-        'fecha_nacimiento' => 'date',
+        // 'fecha_nacimiento' => 'date',
         'perfil_completo' => 'boolean',
     ];
 
@@ -205,8 +205,8 @@ class Ciudadano extends Model
             'primer_nombre',
             'primer_apellido',
             'numero_celular',
-            'direccion_notificacion',
-            'fecha_nacimiento',
+            // 'direccion_notificacion',
+            // 'fecha_nacimiento',
             'departamento_id',
             'ciudad_id',
             'genero',

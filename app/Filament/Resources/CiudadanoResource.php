@@ -226,6 +226,10 @@ class CiudadanoResource extends Resource
     public static function canViewAny(): bool
     {
         return Auth::user()->can('gestionar_ciudadanos') ||
+            Auth::user()->can('ver_ciudadanos') ||
+            Auth::user()->can('crear_ciudadanos') ||
+            Auth::user()->can('editar_ciudadanos') ||
+            Auth::user()->can('eliminar_ciudadanos') ||
             Auth::user()->hasRole('admin');
     }
 }
