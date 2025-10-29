@@ -2,107 +2,109 @@
 
 namespace App\Policies;
 
-use App\Models\User;
 use App\Models\Ciudadano;
-use Illuminate\Auth\Access\HandlesAuthorization;
+use App\Models\User;
 
 class CiudadanoPolicy
 {
-    use HandlesAuthorization;
-
     /**
-     * Determine whether the user can view any models.
+     * Ciudadanos pueden ver el listado (solo verán el suyo por el filtro en Resource)
      */
     public function viewAny(User $user): bool
     {
-        return $user->can('view_any_perfil::ciudadano');
+        return $user->hasRole(['ciudadano', 'super_admin', 'funcionario']);
     }
 
     /**
-     * Determine whether the user can view the model.
+     * Solo puede ver su propio perfil
      */
     public function view(User $user, Ciudadano $ciudadano): bool
     {
-        return $user->can('view_perfil::ciudadano');
+        // Ciudadanos solo ven su perfil
+        if ($user->hasRole('ciudadano')) {
+            return $user->id === $ciudadano->user_id;
+        }
+
+        // Admins pueden ver cualquier perfil
+        return $user->hasRole(['super_admin', 'funcionario']);
     }
 
     /**
-     * Determine whether the user can create models.
+     * No puede crear perfiles adicionales (ya se crea automáticamente al registrarse)
      */
     public function create(User $user): bool
     {
-        return $user->can('create_perfil::ciudadano');
+        // Solo admins pueden crear perfiles manualmente
+        return $user->hasRole(['super_admin', 'funcionario']);
     }
 
     /**
-     * Determine whether the user can update the model.
+     * Solo puede editar su propio perfil
      */
     public function update(User $user, Ciudadano $ciudadano): bool
     {
-        return $user->can('update_perfil::ciudadano');
+        // Ciudadanos solo editan su perfil
+        if ($user->hasRole('ciudadano')) {
+            return $user->id === $ciudadano->user_id;
+        }
+
+        // Admins pueden editar cualquier perfil
+        return $user->hasRole(['super_admin', 'funcionario']);
     }
 
     /**
-     * Determine whether the user can delete the model.
+     * Los ciudadanos NO pueden eliminar su perfil
      */
     public function delete(User $user, Ciudadano $ciudadano): bool
     {
-        return $user->can('delete_perfil::ciudadano');
+        // Solo super admin puede eliminar perfiles
+        return $user->hasRole('super_admin');
     }
 
     /**
-     * Determine whether the user can bulk delete.
+     * No puede eliminar múltiples perfiles
      */
     public function deleteAny(User $user): bool
     {
-        return $user->can('delete_any_perfil::ciudadano');
+        return $user->hasRole('super_admin');
     }
 
     /**
-     * Determine whether the user can permanently delete.
+     * No aplica soft deletes
      */
     public function forceDelete(User $user, Ciudadano $ciudadano): bool
     {
-        return $user->can('force_delete_perfil::ciudadano');
+        return $user->hasRole('super_admin');
     }
 
-    /**
-     * Determine whether the user can permanently bulk delete.
-     */
     public function forceDeleteAny(User $user): bool
     {
-        return $user->can('force_delete_any_perfil::ciudadano');
+        return $user->hasRole('super_admin');
     }
 
-    /**
-     * Determine whether the user can restore.
-     */
     public function restore(User $user, Ciudadano $ciudadano): bool
     {
-        return $user->can('restore_perfil::ciudadano');
+        return $user->hasRole('super_admin');
     }
 
-    /**
-     * Determine whether the user can bulk restore.
-     */
     public function restoreAny(User $user): bool
     {
-        return $user->can('restore_any_perfil::ciudadano');
+        return $user->hasRole('super_admin');
     }
 
     /**
-     * Determine whether the user can replicate.
+     * No puede replicar perfiles
      */
     public function replicate(User $user, Ciudadano $ciudadano): bool
     {
-        return $user->can('replicate_perfil::ciudadano');
+        return false;
     }
 
     /**
-     * Determine whether the user can reorder.
+     * No necesita reordenar
      */
     public function reorder(User $user): bool
     {
-        return $user->can('reorder_perfil::ciudadano');
+        return false;
     }
 }

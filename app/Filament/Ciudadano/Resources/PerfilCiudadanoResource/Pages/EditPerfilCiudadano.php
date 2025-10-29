@@ -3,7 +3,6 @@
 namespace App\Filament\Ciudadano\Resources\PerfilCiudadanoResource\Pages;
 
 use App\Filament\Ciudadano\Resources\PerfilCiudadanoResource;
-use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\DB;
@@ -11,8 +10,32 @@ use Illuminate\Support\Facades\DB;
 class EditPerfilCiudadano extends EditRecord
 {
     protected static string $resource = PerfilCiudadanoResource::class;
-
     protected static ?string $title = 'Completar Mi Perfil';
+
+    public function mount($record = null): void
+    {
+        parent::mount($record);
+
+        // Mostrar notificación al entrar a editar si el perfil está incompleto
+        if (!$this->record->perfil_completo) {
+            $camposFaltantes = [];
+            if (empty($this->record->primer_nombre)) $camposFaltantes[] = 'Primer Nombre';
+            if (empty($this->record->primer_apellido)) $camposFaltantes[] = 'Primer Apellido';
+            if (empty($this->record->numero_celular)) $camposFaltantes[] = 'Número de Celular';
+            if (empty($this->record->genero)) $camposFaltantes[] = 'Género';
+            if (empty($this->record->departamento_id)) $camposFaltantes[] = 'Departamento';
+            if (empty($this->record->ciudad_id)) $camposFaltantes[] = 'Ciudad';
+
+            if (count($camposFaltantes) > 0) {
+                Notification::make()
+                    ->warning()
+                    ->title('Complete los campos faltantes')
+                    ->body('Faltan ' . count($camposFaltantes) . ' campos: ' . implode(', ', $camposFaltantes))
+                    ->persistent()
+                    ->send();
+            }
+        }
+    }
 
     protected function getHeaderActions(): array
     {
@@ -26,6 +49,7 @@ class EditPerfilCiudadano extends EditRecord
 
     protected function getRedirectUrl(): string
     {
+        // Permanecer en la misma página después de guardar
         return $this->getResource()::getUrl('edit', ['record' => $this->record]);
     }
 
@@ -34,28 +58,40 @@ class EditPerfilCiudadano extends EditRecord
         return Notification::make()
             ->success()
             ->title('Perfil actualizado')
-            ->body('Su perfil ha sido actualizado exitosamente.');
+            ->body('Los cambios se han guardado correctamente.')
+            ->send();
     }
 
     protected function afterSave(): void
     {
-        // Verificar perfil completo sin usar el método del modelo
+        // Verificar perfil completo
         $camposRequeridos = [
             'primer_nombre',
             'primer_apellido',
             'numero_celular',
-            // 'direccion_notificacion',
-            // 'fecha_nacimiento',
             'departamento_id',
             'ciudad_id',
             'genero',
         ];
 
         $completo = true;
+        $camposFaltantes = [];
+
         foreach ($camposRequeridos as $campo) {
             if (empty($this->record->$campo)) {
                 $completo = false;
-                break;
+                
+                // Mapear nombres técnicos a nombres legibles
+                $nombresCampos = [
+                    'primer_nombre' => 'Primer Nombre',
+                    'primer_apellido' => 'Primer Apellido',
+                    'numero_celular' => 'Número de Celular',
+                    'departamento_id' => 'Departamento',
+                    'ciudad_id' => 'Ciudad',
+                    'genero' => 'Género',
+                ];
+                
+                $camposFaltantes[] = $nombresCampos[$campo] ?? $campo;
             }
         }
 
@@ -63,150 +99,42 @@ class EditPerfilCiudadano extends EditRecord
             $completo = false;
         }
 
-        // Actualizar directamente sin disparar observers
+        // Actualizar el estado
         DB::table('ciudadanos')
             ->where('id', $this->record->id)
             ->update(['perfil_completo' => $completo]);
 
+        // Notificaciones según el estado
         if ($completo) {
+            // Perfil completo - Notificación de éxito
             Notification::make()
                 ->success()
-                ->title('¡Perfil completo!')
-                ->body('Ahora puede crear reclamos en el sistema.')
+                ->title('¡Perfil Completo!')
+                ->body('Su perfil está completo. Ahora puede crear reclamos.')
+                ->persistent()
+                ->actions([
+                    \Filament\Notifications\Actions\Action::make('crear_reclamo')
+                        ->label('Crear Reclamo')
+                        ->button()
+                        ->color('success')
+                        ->url(route('filament.ciudadano.resources.mis-reclamos.create')),
+                    \Filament\Notifications\Actions\Action::make('ir_dashboard')
+                        ->label('Ir al Dashboard')
+                        ->button()
+                        ->url(route('filament.ciudadano.pages.dashboard')),
+                ])
+                ->send();
+        } else {
+            // Perfil incompleto - Notificación de advertencia
+            Notification::make()
+                ->warning()
+                ->title('Perfil aún incompleto')
+                ->body('Faltan campos por completar: ' . implode(', ', $camposFaltantes))
                 ->persistent()
                 ->send();
         }
+
+        // Refrescar el registro para actualizar el estado en memoria
+        $this->record->refresh();
     }
-
-    // protected function afterSave(): void
-    // {
-    //     // Verificar si el perfil está completo
-    //     $this->record->verificarPerfilCompleto();
-
-    //     if ($this->record->perfil_completo && !$this->record->wasRecentlyCreated) {
-    //         Notification::make()
-    //             ->success()
-    //             ->title('¡Perfil completo!')
-    //             ->body('Ahora puede crear reclamos en el sistema.')
-    //             ->persistent()
-    //             ->send();
-    //     }
-    // }
 }
-
-
-
-
-// namespace App\Filament\Ciudadano\Resources\PerfilCiudadanoResource\Pages;
-
-// use App\Filament\Ciudadano\Resources\PerfilCiudadanoResource;
-// use App\Models\Ciudadano;
-// use Filament\Actions;
-// use Filament\Resources\Pages\EditRecord;
-// use Filament\Notifications\Notification;
-// use Illuminate\Contracts\Support\Htmlable;
-
-// class EditPerfilCiudadano extends EditRecord
-// {
-//     protected static string $resource = PerfilCiudadanoResource::class;
-
-//     protected static ?string $title = 'Mi Perfil';
-
-//     protected static ?string $navigationLabel = 'Mi Perfil';
-
-//     protected function getHeaderActions(): array
-//     {
-//         return [];
-//     }
-
-//     // public function mount(int|string $record = null): void
-//     // {
-//     //     $ciudadano = Ciudadano::where('user_id', auth()->id())->first();
-
-//     //     if (!$ciudadano) {
-//     //         $this->redirectRoute('filament.ciudadano.auth.login', navigate: true);
-//     //         return;
-//     //     }
-
-//     //     parent::mount($ciudadano->id);
-//     // }
-
-//         public function mount($record = null): void
-//     {
-
-//         $nombreParts = explode(' ', auth()->user()->name, 4);
-
-//         // Buscar o crear el perfil del ciudadano
-//         $ciudadano = Ciudadano::firstOrCreate(
-//         // $ciudadano = \App\Models\Ciudadano::firstOrCreate(
-//             ['user_id' => auth()->id()],
-//             [
-//                 'tipo_documento' => auth()->user()->tipo_documento ?? 'CC',
-//                 'numero_documento' => auth()->user()->numero_documento ?? auth()->id(),
-//                 'primer_nombre' => $nombreParts[0] ?? '',
-//                 'segundo_nombre' => $nombreParts[1] ?? '',
-//                 'primer_apellido' => $nombreParts[2] ?? 'Pendiente',
-//                 'segundo_apellido' => $nombreParts[3] ?? '',
-//                 'numero_celular' => '',
-//                 'direccion_notificacion' => '',
-//                 'fecha_nacimiento' => now()->subYears(18),
-//                 'departamento_id' => null,
-//                 'ciudad_id' => null,
-//                 'genero' => 'M',
-//                 'perfil_completo' => false,
-//             ]
-//         );
-
-//         parent::mount($ciudadano->id);
-//     }
-
-//     protected function getSavedNotification(): ?Notification
-//     {
-//         $notification = Notification::make()
-//             ->success()
-//             ->title('Perfil actualizado')
-//             ->body('Su perfil ha sido actualizado exitosamente.');
-
-//         // Verificar si el perfil está completo después de guardar
-//         $this->record->verificarPerfilCompleto();
-
-//         if ($this->record->perfil_completo) {
-//             $notification
-//                 ->persistent()
-//                 ->body('¡Su perfil está completo! Ya puede crear reclamos.')
-//                 ->actions([
-//                     \Filament\Notifications\Actions\Action::make('crear_reclamo')
-//                         ->label('Crear Reclamo')
-//                         ->url(route('filament.ciudadano.resources.mis-reclamos.create'))
-//                         ->button(),
-//                 ]);
-//         }
-
-//         return $notification;
-//     }
-
-//     protected function getFormActions(): array
-//     {
-//         return [
-//             $this->getSaveFormAction()
-//                 ->label('Guardar Cambios'),
-//         ];
-//     }
-
-//     protected function getRedirectUrl(): string
-//     {
-//         return $this->getResource()::getUrl('index');
-//     }
-
-//     // Método adicional para personalizar el título
-//     public function getTitle(): string | Htmlable
-//     {
-//         return 'Mi Perfil';
-//     }
-
-//     // Método para personalizar el breadcrumb
-//     public function getBreadcrumb(): string
-//     {
-//         return 'Mi Perfil';
-//     }
-// }

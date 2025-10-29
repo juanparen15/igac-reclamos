@@ -19,22 +19,11 @@ use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use App\Http\Middleware\EnsureUserIsCiudadano;
 use App\Filament\Ciudadano\Pages\Auth\Register;
-use Illuminate\Support\Facades\DB;
 
 class CiudadanoPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {
-
-        if (config('app.debug')) {
-            DB::listen(function ($query) {
-                logger()->debug('SQL', [
-                    'sql' => $query->sql,
-                    'bindings' => $query->bindings,
-                    'time' => $query->time,
-                ]);
-            });
-        }
         return $panel
             ->id('ciudadano')
             ->path('ciudadano')
@@ -42,6 +31,7 @@ class CiudadanoPanelProvider extends PanelProvider
             ->registration(Register::class)
             ->passwordReset()
             ->emailVerification()
+            ->authGuard('web')  // ✅ AGREGAR ESTA LÍNEA
             ->colors([
                 'primary' => Color::Blue,
             ])

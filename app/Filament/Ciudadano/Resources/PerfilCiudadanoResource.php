@@ -11,26 +11,18 @@ use Filament\Forms;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
-use Filament\Forms\Set;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Filament\Notifications\Notification;
-use Illuminate\Support\Collection;
 
 class PerfilCiudadanoResource extends Resource
 {
     protected static ?string $model = Ciudadano::class;
-
     protected static ?string $navigationIcon = 'heroicon-o-user-circle';
-
     protected static ?string $modelLabel = 'Mi Perfil';
-
     protected static ?string $pluralModelLabel = 'Mi Perfil';
-
     protected static ?string $navigationLabel = 'Mi Perfil';
-
     protected static ?int $navigationSort = 1;
 
     public static function form(Form $form): Form
@@ -38,23 +30,23 @@ class PerfilCiudadanoResource extends Resource
         return $form
             ->schema([
                 Forms\Components\Section::make('Información de Identificación')
-                    ->description('Estos datos fueron registrados durante su registro')
+                    ->description('Estos datos fueron registrados durante su registro y no pueden modificarse')
                     ->schema([
                         Forms\Components\Grid::make(2)
                             ->schema([
-                                Forms\Components\TextInput::make('tipo_documento')
+                                Forms\Components\Placeholder::make('user.tipo_documento')
                                     ->label('Tipo de Documento')
-                                    ->disabled()
-                                    ->dehydrated(false),
-                                Forms\Components\TextInput::make('numero_documento')
+                                    ->content(fn($record) => $record?->user?->tipo_documento ?? 'No definido'),
+
+                                Forms\Components\Placeholder::make('user.numero_documento')
                                     ->label('Número de Documento')
-                                    ->disabled()
-                                    ->dehydrated(false),
+                                    ->content(fn($record) => $record?->user?->numero_documento ?? 'No definido'),
                             ]),
-                    ]),
+                    ])
+                    ->collapsible(),
 
                 Forms\Components\Section::make('Información Personal')
-                    ->description('Complete todos los campos para poder crear reclamos')
+                    ->description('Complete todos los campos requeridos para poder crear reclamos')
                     ->schema([
                         Forms\Components\Grid::make(2)
                             ->schema([
@@ -77,7 +69,16 @@ class PerfilCiudadanoResource extends Resource
                             ->label('Número de Celular')
                             ->tel()
                             ->required()
-                            ->maxLength(20),
+                            ->prefixIcon('heroicon-o-phone')
+                            ->prefix('+57')
+                            ->minLength(10)
+                            ->maxLength(10)
+                            ->numeric()
+                            ->rules(['regex:/^[3][0-9]{9}$/'])
+                            ->validationMessages([
+                                'regex' => 'Ingrese un número de celular válido colombiano (10 dígitos comenzando con 3)',
+                            ])
+                            ->helperText('Ejemplo: 3001234567'),
                         Forms\Components\Select::make('genero')
                             ->label('Género')
                             ->options([
@@ -87,62 +88,41 @@ class PerfilCiudadanoResource extends Resource
                             ])
                             ->required()
                             ->native(false),
-                        // Forms\Components\Textarea::make('direccion_notificacion')
-                        //     ->label('Dirección de Notificación')
-                        //     ->required()
-                        //     ->rows(2)
-                        //     ->maxLength(255),
-                        // Forms\Components\DatePicker::make('fecha_nacimiento')
-                        //     ->label('Fecha de Nacimiento')
-                        //     ->required()
-                        //     ->maxDate(now()->subYears(18))
-                        //     ->displayFormat('d/m/Y'),
                         Forms\Components\Grid::make(2)
                             ->schema([
                                 Forms\Components\Select::make('departamento_id')
-                                    ->label('Departamento de Nacimiento')
-                                    // ->relationship(name: 'departamento', titleAttribute: 'nombre')
+                                    ->label('Departamento de Residencia')
                                     ->options(Departamento::pluck('nombre', 'id'))
                                     ->required()
                                     ->searchable()
                                     ->preload()
                                     ->live()
-                                    // ->afterStateUpdated(function (Set $set) {
-                                    //     $set('ciudad_id', null);
-                                    // })
                                     ->afterStateUpdated(fn(Forms\Set $set) => $set('ciudad_id', null)),
+
                                 Forms\Components\Select::make('ciudad_id')
-                                    ->label('Ciudad de Nacimiento')
-                                    // ->options(fn(Get $get): Collection => Ciudad::query()
-                                    //     ->where('departamento_id', $get('departamento_id'))
-                                    //     ->pluck('nombre', 'id'))
+                                    ->label('Ciudad de Residencia')
                                     ->options(
                                         fn(Get $get): array =>
                                         Ciudad::where('departamento_id', $get('departamento_id'))
-                                            ->where('estado', true)
-                                            ->pluck('nombre', 'id')
+                                            ->pluck('nombre', 'id')  // ✅ SIN filtro de estado
                                             ->toArray()
                                     )
                                     ->required()
                                     ->searchable()
                                     ->preload()
-                                    ->live(),
+                                    ->live()
+                                    ->disabled(fn(Get $get): bool => !$get('departamento_id'))
+                                    ->helperText('Seleccione primero un departamento'),
                             ]),
-                        // Forms\Components\TextInput::make('condicion_especial')
-                        //     ->label('Condición Especial')
-                        //     ->helperText('Si tiene alguna condición especial, por favor especifique')
-                        //     ->maxLength(100),
-                        // Forms\Components\FileUpload::make('foto_perfil')
-                        //     ->label('Foto de Perfil')
-                        //     ->image()
-                        //     ->imageEditor()
-                        //     ->imageEditorAspectRatios([
-                        //         '1:1',
-                        //     ])
-                        //     ->directory('perfiles')
-                        //     ->disk('public')
-                        //     ->maxSize(5120)
-                        //     ->helperText('Tamaño máximo: 5MB. Formatos: JPG, PNG'),
+                        Forms\Components\FileUpload::make('foto_perfil')
+                            ->label('Foto de Perfil')
+                            ->image()
+                            ->imageEditor()
+                            ->imageEditorAspectRatios(['1:1'])
+                            ->directory('perfiles')
+                            ->disk('public')
+                            ->maxSize(5120)
+                            ->helperText('Tamaño máximo: 5MB. Formatos: JPG, PNG'),
                     ])
                     ->columns(2),
 
@@ -210,7 +190,7 @@ class PerfilCiudadanoResource extends Resource
             ->filters([])
             ->actions([
                 Tables\Actions\EditAction::make()
-                    ->label('Completar Perfil'),
+                    ->label('Editar Perfil'),
             ])
             ->bulkActions([])
             ->paginated(false);
@@ -237,7 +217,7 @@ class PerfilCiudadanoResource extends Resource
 
     public static function canCreate(): bool
     {
-        return false; // No permitir crear nuevos perfiles
+        return false;
     }
 
     public static function canDeleteAny(): bool

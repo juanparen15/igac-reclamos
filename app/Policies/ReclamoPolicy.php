@@ -2,107 +2,114 @@
 
 namespace App\Policies;
 
-use App\Models\User;
 use App\Models\Reclamo;
-use Illuminate\Auth\Access\HandlesAuthorization;
+use App\Models\User;
 
 class ReclamoPolicy
 {
-    use HandlesAuthorization;
-
     /**
-     * Determine whether the user can view any models.
+     * Todos pueden ver el listado (ciudadanos verán solo los suyos por el filtro)
      */
     public function viewAny(User $user): bool
     {
-        return $user->can('view_any_mis::reclamos');
+        return $user->hasRole(['ciudadano', 'super_admin', 'funcionario']);
     }
 
     /**
-     * Determine whether the user can view the model.
+     * Puede ver el reclamo si es suyo o es admin/funcionario
      */
     public function view(User $user, Reclamo $reclamo): bool
     {
-        return $user->can('view_mis::reclamos');
+        // Ciudadano solo ve sus propios reclamos
+        if ($user->hasRole('ciudadano')) {
+            return $reclamo->ciudadano->user_id === $user->id;
+        }
+
+        // Admin y funcionario ven todos
+        return $user->hasRole(['super_admin', 'funcionario']);
     }
 
     /**
-     * Determine whether the user can create models.
+     * Solo ciudadanos con perfil completo pueden crear reclamos
      */
     public function create(User $user): bool
     {
-        return $user->can('create_mis::reclamos');
+        // Ciudadanos necesitan perfil completo
+        if ($user->hasRole('ciudadano')) {
+            return $user->ciudadano && $user->ciudadano->perfil_completo;
+        }
+
+        // Admins y funcionarios también pueden crear
+        return $user->hasRole(['super_admin', 'funcionario']);
     }
 
     /**
-     * Determine whether the user can update the model.
+     * Ciudadanos NO pueden editar reclamos después de crearlos
+     * Solo admins y funcionarios pueden editar
      */
     public function update(User $user, Reclamo $reclamo): bool
     {
-        return $user->can('update_mis::reclamos');
+        // Ciudadanos NO editan después de crear
+        if ($user->hasRole('ciudadano')) {
+            return false;
+        }
+
+        // Admin y funcionario pueden editar
+        return $user->hasRole(['super_admin', 'funcionario']);
     }
 
     /**
-     * Determine whether the user can delete the model.
+     * Solo super admin puede eliminar reclamos
      */
     public function delete(User $user, Reclamo $reclamo): bool
     {
-        return $user->can('delete_mis::reclamos');
+        return $user->hasRole('super_admin');
     }
 
     /**
-     * Determine whether the user can bulk delete.
+     * Solo super admin puede eliminar en masa
      */
     public function deleteAny(User $user): bool
     {
-        return $user->can('delete_any_mis::reclamos');
+        return $user->hasRole('super_admin');
     }
 
     /**
-     * Determine whether the user can permanently delete.
+     * No aplica soft deletes
      */
     public function forceDelete(User $user, Reclamo $reclamo): bool
     {
-        return $user->can('force_delete_mis::reclamos');
+        return $user->hasRole('super_admin');
     }
 
-    /**
-     * Determine whether the user can permanently bulk delete.
-     */
     public function forceDeleteAny(User $user): bool
     {
-        return $user->can('force_delete_any_mis::reclamos');
+        return $user->hasRole('super_admin');
     }
 
-    /**
-     * Determine whether the user can restore.
-     */
     public function restore(User $user, Reclamo $reclamo): bool
     {
-        return $user->can('restore_mis::reclamos');
+        return $user->hasRole('super_admin');
     }
 
-    /**
-     * Determine whether the user can bulk restore.
-     */
     public function restoreAny(User $user): bool
     {
-        return $user->can('restore_any_mis::reclamos');
+        return $user->hasRole('super_admin');
     }
 
     /**
-     * Determine whether the user can replicate.
+     * No puede replicar reclamos
      */
     public function replicate(User $user, Reclamo $reclamo): bool
     {
-        return $user->can('replicate_mis::reclamos');
+        return false;
     }
 
     /**
-     * Determine whether the user can reorder.
+     * No necesita reordenar
      */
     public function reorder(User $user): bool
     {
-        return $user->can('reorder_mis::reclamos');
+        return false;
     }
 }
