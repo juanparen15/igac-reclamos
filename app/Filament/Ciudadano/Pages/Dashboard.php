@@ -51,6 +51,6 @@ class Dashboard extends BaseDashboard
 
     public static function shouldRegisterNavigation(): bool
     {
-        return auth()->check() && auth()->user()->can('ver_dashboard');
+        return auth()->check();
     }
 }

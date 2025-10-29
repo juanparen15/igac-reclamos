@@ -140,8 +140,7 @@ class ReclamoResource extends Resource
                             ->label('Notas Internas')
                             ->rows(3),
                     ])
-                    ->columns(2)
-                    ->visible(fn() => auth()->user()->can('gestionar_reclamos')),
+                    ->columns(2),
             ]);
     }
 
@@ -236,13 +235,13 @@ class ReclamoResource extends Resource
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make('editar')
-                    ->visible(fn(Reclamo $record): bool => auth()->user()->can('editar_reclamos') && in_array($record->estado, ['nuevo'])),
+                    ->visible(fn(Reclamo $record): bool => in_array($record->estado, ['nuevo'])),
                 // Acciones rápidas de cambio de estado
                 Tables\Actions\Action::make('asignar')
                     ->label('Asignar')
                     ->icon('heroicon-o-user-plus')
                     ->color('info')
-                    ->visible(fn(Reclamo $record): bool => !$record->asignado_a && auth()->user()->can('asignar_reclamos'))
+                    ->visible(fn(Reclamo $record): bool => !$record->asignado_a)
                     ->form([
                         Forms\Components\Select::make('asignado_a')
                             ->label('Asignar a')
@@ -268,8 +267,7 @@ class ReclamoResource extends Resource
                     ->color('success')
                     ->visible(
                         fn(Reclamo $record): bool =>
-                        $record->estado === 'en_proceso' &&
-                            auth()->user()->can('resolver_reclamos')
+                        $record->estado === 'en_proceso'
                     )
                     ->requiresConfirmation()
                     ->modalHeading('Resolver Reclamo')
@@ -356,7 +354,7 @@ class ReclamoResource extends Resource
                         ->deselectRecordsAfterCompletion(),
 
                     Tables\Actions\DeleteBulkAction::make()
-                        ->visible(fn(): bool => auth()->user()->hasRole('admin')),
+                        ->visible(fn(): bool => auth()->user()->hasRole('super_admin')),
                 ]),
             ])
             ->defaultSort('created_at', 'desc');

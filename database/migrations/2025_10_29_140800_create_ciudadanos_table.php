@@ -11,18 +11,17 @@ return new class extends Migration
         Schema::create('ciudadanos', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            // $table->enum('tipo_documento', ['CC', 'CE', 'TI', 'PAS', 'NIT']);
-            // $table->string('numero_documento')->unique();
-            $table->string('primer_nombre');
+            // ❌ ELIMINAR tipo_documento y numero_documento de aquí
+            $table->string('primer_nombre')->nullable();
             $table->string('segundo_nombre')->nullable();
-            $table->string('primer_apellido');
+            $table->string('primer_apellido')->nullable();
             $table->string('segundo_apellido')->nullable();
-            $table->string('numero_celular');
-            $table->text('direccion_notificacion');
-            $table->date('fecha_nacimiento');
-            $table->string('departamento_id')->nullable();
-            $table->string('ciudad_id')->nullable();
-            $table->enum('genero', ['M', 'F', 'O']);
+            $table->string('numero_celular')->nullable();
+            $table->text('direccion_notificacion')->nullable();
+            $table->date('fecha_nacimiento')->nullable();
+            $table->foreignId('departamento_id')->nullable()->constrained()->onDelete('set null');
+            $table->foreignId('ciudad_id')->nullable()->constrained('ciudades')->onDelete('set null');
+            $table->enum('genero', ['M', 'F', 'O'])->nullable();
             $table->string('condicion_especial')->nullable();
             $table->string('foto_perfil')->nullable();
             $table->json('campos_adicionales')->nullable();

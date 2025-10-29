@@ -2,13 +2,20 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Ciudad extends Model
 {
+    use HasFactory;
+
     protected $table = 'ciudades';
 
-    protected $fillable = ['nombre', 'estado', 'departamento_id'];
+    protected $fillable = [
+        'codigo',
+        'nombre',
+        'departamento_id',  // ✅ Asegúrate que esté aquí
+    ];
 
     public function departamento()
     {
@@ -18,10 +25,5 @@ class Ciudad extends Model
     public function ciudadanos()
     {
         return $this->hasMany(Ciudadano::class, 'ciudad_id');
-    }
-
-    public function scopeActivas($query)
-    {
-        return $query->where('estado', 1);
     }
 }

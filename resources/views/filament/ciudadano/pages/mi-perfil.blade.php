@@ -1,5 +1,5 @@
 {{-- resources/views/filament/ciudadano/pages/mi-perfil.blade.php --}}
-<x-filament-panels::page>
+{{-- <x-filament-panels::page>
     <x-filament-panels::form wire:submit="save">
         {{ $this->form }}
 
@@ -7,4 +7,4 @@
             :actions="$this->getFormActions()"
         />
     </x-filament-panels::form>
-</x-filament-panels::page>
+</x-filament-panels::page> --}}

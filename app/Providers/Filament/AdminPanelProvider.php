@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use Filament\Http\Middleware\Authenticate;
+use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Pages;
@@ -27,8 +28,15 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
+            ->passwordReset()
+            ->authGuard('web')  // ✅ AGREGADO
             ->colors([
-                'primary' => Color::Amber,
+                'primary' => Color::Blue,
+                'danger' => Color::Rose,
+                'gray' => Color::Gray,
+                'info' => Color::Sky,
+                'success' => Color::Emerald,
+                'warning' => Color::Amber,
             ])
             ->brandName('IGAC - Sistema de Reclamos')
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
@@ -37,9 +45,6 @@ class AdminPanelProvider extends PanelProvider
                 Pages\Dashboard::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
-            ->widgets([
-                Widgets\AccountWidget::class,
-            ])
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
@@ -54,21 +59,13 @@ class AdminPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
             ])
+            ->plugin(FilamentShieldPlugin::make())  // ✅ Cambiado de plugins([]) a plugin()
             ->navigationGroups([
                 'Gestión de Reclamos',
                 'Administración',
                 'Configuración',
             ])
-            // ->colors([
-            //     'primary' => Color::Blue,
-            //     'danger' => Color::Rose,
-            //     'gray' => Color::Gray,
-            //     'info' => Color::Sky,
-            //     'success' => Color::Emerald,
-            //     'warning' => Color::Amber,
-            // ])
-            ->font('Inter') // Fuente moderna
-            // ->darkMode(false) // O true según preferencia
+            ->font('Inter')
             ->spa();
     }
 }
